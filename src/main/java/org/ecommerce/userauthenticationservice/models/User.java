@@ -17,5 +17,5 @@ public class User extends BaseModel {
 
     private String phoneNumber;
 
-    private List<Role> role = new ArrayList<>();
+    private List<Role> roles = new ArrayList<>();
 }
