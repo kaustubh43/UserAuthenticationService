@@ -3,8 +3,12 @@ package org.ecommerce.userauthenticationservice.controllers;
 import org.ecommerce.userauthenticationservice.dtos.LoginRequestDto;
 import org.ecommerce.userauthenticationservice.dtos.SignUpRequestDto;
 import org.ecommerce.userauthenticationservice.dtos.UserDto;
+import org.ecommerce.userauthenticationservice.exceptions.PasswordMismatchException;
+import org.ecommerce.userauthenticationservice.exceptions.UserNotRegisteredException;
+import org.ecommerce.userauthenticationservice.models.User;
 import org.ecommerce.userauthenticationservice.services.IAuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/auth")
 public class AuthController {
 
-    private IAuthenticationService authenticationService;
+    private final IAuthenticationService authenticationService;
 
     @Autowired
     public AuthController(IAuthenticationService authenticationService) {
@@ -24,14 +28,38 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<UserDto> signUp(@RequestBody SignUpRequestDto signUpRequestDto) {
-        // Todo: Implementation for user signup
-        return null;
+        try{
+           User user = authenticationService.signUp(signUpRequestDto.getEmail(), signUpRequestDto.getName(), signUpRequestDto.getPassword(), signUpRequestDto.getPhoneNumber());
+           return new ResponseEntity<>(from(user), HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
     }
 
     @PostMapping("/login")
     public ResponseEntity<UserDto> login(@RequestBody LoginRequestDto loginRequestDto) {
-        return null;
+        try{
+            User user = authenticationService.login(loginRequestDto.getEmail(), loginRequestDto.getPassword());
+            return new ResponseEntity<>(from(user), HttpStatus.OK);
+        } catch (PasswordMismatchException e) {
+            return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
+        } catch (UserNotRegisteredException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
     }
 
     // Todo: Implementation for user logout
+    public ResponseEntity<UserDto> logout() {
+        return new ResponseEntity<>(null, HttpStatus.NOT_IMPLEMENTED);
+    }
+
+    public UserDto from(User user) {
+        return UserDto.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .phoneNumber(user.getPhoneNumber())
+                .roles(user.getRoles())
+                .build();
+    }
 }
