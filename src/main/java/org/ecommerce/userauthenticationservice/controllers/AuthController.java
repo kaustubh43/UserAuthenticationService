@@ -3,6 +3,8 @@ package org.ecommerce.userauthenticationservice.controllers;
 import org.ecommerce.userauthenticationservice.dtos.LoginRequestDto;
 import org.ecommerce.userauthenticationservice.dtos.SignUpRequestDto;
 import org.ecommerce.userauthenticationservice.dtos.UserDto;
+import org.ecommerce.userauthenticationservice.services.IAuthenticationService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,6 +14,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
+
+    private IAuthenticationService authenticationService;
+
+    @Autowired
+    public AuthController(IAuthenticationService authenticationService) {
+        this.authenticationService = authenticationService;
+    }
 
     @PostMapping("/signup")
     public ResponseEntity<UserDto> signUp(@RequestBody SignUpRequestDto signUpRequestDto) {
