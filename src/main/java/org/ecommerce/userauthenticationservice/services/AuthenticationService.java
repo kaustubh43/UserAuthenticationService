@@ -6,6 +6,7 @@ import org.ecommerce.userauthenticationservice.exceptions.UserNotRegisteredExcep
 import org.ecommerce.userauthenticationservice.models.User;
 import org.ecommerce.userauthenticationservice.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -13,10 +14,12 @@ import java.util.Optional;
 @Service
 public class AuthenticationService implements IAuthenticationService {
     private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
-    public AuthenticationService(UserRepository userRepository) {
+    public AuthenticationService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -29,7 +32,7 @@ public class AuthenticationService implements IAuthenticationService {
         User user = new User();
         user.setEmail(email);
         user.setName(name);
-        user.setPassword(password);
+        user.setPassword(passwordEncoder.encode(password));
         user.setPhoneNumber(phoneNumber);
         userRepository.save(user);
         return user;
@@ -42,7 +45,7 @@ public class AuthenticationService implements IAuthenticationService {
             throw new UserNotRegisteredException("User not registered. Email: " + email);
         }
         User user = optionalUser.get();
-        if (!user.getPassword().equals(password)) {
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new PasswordMismatchException("Incorrect password for email: " + email);
         }
         // Todo: Generate JWT
