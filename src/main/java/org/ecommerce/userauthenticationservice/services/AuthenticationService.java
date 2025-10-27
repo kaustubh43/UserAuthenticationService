@@ -6,14 +6,16 @@ import org.antlr.v4.runtime.misc.Pair;
 import org.ecommerce.userauthenticationservice.exceptions.PasswordMismatchException;
 import org.ecommerce.userauthenticationservice.exceptions.UserExistsException;
 import org.ecommerce.userauthenticationservice.exceptions.UserNotRegisteredException;
+import org.ecommerce.userauthenticationservice.models.Session;
+import org.ecommerce.userauthenticationservice.models.Status;
 import org.ecommerce.userauthenticationservice.models.User;
+import org.ecommerce.userauthenticationservice.repositories.SessionRepository;
 import org.ecommerce.userauthenticationservice.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -22,11 +24,13 @@ import java.util.Optional;
 public class AuthenticationService implements IAuthenticationService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final SessionRepository sessionRepository;
 
     @Autowired
-    public AuthenticationService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
+    public AuthenticationService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, SessionRepository sessionRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.sessionRepository = sessionRepository;
     }
 
     @Override
@@ -75,7 +79,12 @@ public class AuthenticationService implements IAuthenticationService {
         SecretKey secretKey = algorithm.key().build();
 
         String token = Jwts.builder().claims(claims).signWith(secretKey).compact();
+        Session session = new Session();
+        session.setUser(user);
+        session.setToken(token);
+        session.setStatus(Status.ACTIVE);
 
+        sessionRepository.save(session);
         return new Pair<>(user, token);
     }
     // Validate JWT Token
