@@ -1,5 +1,7 @@
 package org.ecommerce.userauthenticationservice.services;
 
+import io.jsonwebtoken.Jwts;
+import org.antlr.v4.runtime.misc.Pair;
 import org.ecommerce.userauthenticationservice.exceptions.PasswordMismatchException;
 import org.ecommerce.userauthenticationservice.exceptions.UserExistsException;
 import org.ecommerce.userauthenticationservice.exceptions.UserNotRegisteredException;
@@ -9,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @Service
@@ -39,7 +42,7 @@ public class AuthenticationService implements IAuthenticationService {
     }
 
     @Override
-    public User login(String email, String password) {
+    public Pair<User,String> login(String email, String password) {
         Optional<User> optionalUser = userRepository.findByEmail(email);
         if (optionalUser.isEmpty()) {
             throw new UserNotRegisteredException("User not registered. Email: " + email);
@@ -48,7 +51,20 @@ public class AuthenticationService implements IAuthenticationService {
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new PasswordMismatchException("Incorrect password for email: " + email);
         }
-        // Todo: Generate JWT
-        return user;
+
+        //Generate JWT
+
+        String message = "{\n" +
+                "   \"email\": \"kaustubh@gmail.com\",\n" +
+                "   \"roles\": [\n" +
+                "      \"instructor\",\n" +
+                "      \"buddy\"\n" +
+                "   ],\n" +
+                "   \"expirationDate\": \"2ndApril2026\"\n" +
+                "}";
+        byte[] content = message.getBytes(StandardCharsets.UTF_8);
+        String token = Jwts.builder().content(content).compact();
+
+        return new Pair<>(user, token);
     }
 }

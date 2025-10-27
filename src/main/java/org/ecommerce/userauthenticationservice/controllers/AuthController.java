@@ -1,5 +1,6 @@
 package org.ecommerce.userauthenticationservice.controllers;
 
+import org.antlr.v4.runtime.misc.Pair;
 import org.ecommerce.userauthenticationservice.dtos.LoginRequestDto;
 import org.ecommerce.userauthenticationservice.dtos.SignUpRequestDto;
 import org.ecommerce.userauthenticationservice.dtos.UserDto;
@@ -10,6 +11,8 @@ import org.ecommerce.userauthenticationservice.services.IAuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,8 +42,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<UserDto> login(@RequestBody LoginRequestDto loginRequestDto) {
         try{
-            User user = authenticationService.login(loginRequestDto.getEmail(), loginRequestDto.getPassword());
-            return new ResponseEntity<>(from(user), HttpStatus.OK);
+            Pair<User, String> response = authenticationService.login(loginRequestDto.getEmail(), loginRequestDto.getPassword());
+            String token = response.b;
+            MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+            headers.add("Set-Cookie", token);
+            return new ResponseEntity<>(from(response.a), headers, HttpStatus.OK);
         } catch (PasswordMismatchException e) {
             return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
         } catch (UserNotRegisteredException e) {
