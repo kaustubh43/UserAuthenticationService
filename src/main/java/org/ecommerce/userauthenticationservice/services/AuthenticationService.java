@@ -1,6 +1,7 @@
 package org.ecommerce.userauthenticationservice.services;
 
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.MacAlgorithm;
 import org.antlr.v4.runtime.misc.Pair;
 import org.ecommerce.userauthenticationservice.exceptions.PasswordMismatchException;
 import org.ecommerce.userauthenticationservice.exceptions.UserExistsException;
@@ -11,7 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -51,20 +55,30 @@ public class AuthenticationService implements IAuthenticationService {
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new PasswordMismatchException("Incorrect password for email: " + email);
         }
+//        String message = "{\n" +
+//                "   \"email\": \"kaustubh@gmail.com\",\n" +
+//                "   \"roles\": [\n" +
+//                "      \"instructor\",\n" +
+//                "      \"buddy\"\n" +
+//                "   ],\n" +
+//                "   \"expirationDate\": \"2ndApril2026\"\n" +
+//                "}";
+//        byte[] content = message.getBytes(StandardCharsets.UTF_8);
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("user_id", user.getId());
+        claims.put("issued_by", "ecommerce-app");
+        long currentTimeMillis = System.currentTimeMillis();
+        claims.put("iat", currentTimeMillis); // Issued at
+        claims.put("exp", currentTimeMillis + 3600000); // Expiry: Token valid for 1 hour
 
-        //Generate JWT
+        MacAlgorithm algorithm = Jwts.SIG.HS256;
+        SecretKey secretKey = algorithm.key().build();
 
-        String message = "{\n" +
-                "   \"email\": \"kaustubh@gmail.com\",\n" +
-                "   \"roles\": [\n" +
-                "      \"instructor\",\n" +
-                "      \"buddy\"\n" +
-                "   ],\n" +
-                "   \"expirationDate\": \"2ndApril2026\"\n" +
-                "}";
-        byte[] content = message.getBytes(StandardCharsets.UTF_8);
-        String token = Jwts.builder().content(content).compact();
+        String token = Jwts.builder().claims(claims).signWith(secretKey).compact();
 
         return new Pair<>(user, token);
     }
+    // Validate JWT Token
+    // -> Check if the token we receive is valid or not, present in the db or not.
+    // -> Check if the token is expired or not by doing reverse engineering.
 }
