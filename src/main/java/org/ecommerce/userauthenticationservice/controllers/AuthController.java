@@ -4,6 +4,7 @@ import org.antlr.v4.runtime.misc.Pair;
 import org.ecommerce.userauthenticationservice.dtos.LoginRequestDto;
 import org.ecommerce.userauthenticationservice.dtos.SignUpRequestDto;
 import org.ecommerce.userauthenticationservice.dtos.UserDto;
+import org.ecommerce.userauthenticationservice.dtos.ValidateTokenRequestDto;
 import org.ecommerce.userauthenticationservice.exceptions.PasswordMismatchException;
 import org.ecommerce.userauthenticationservice.exceptions.UserNotRegisteredException;
 import org.ecommerce.userauthenticationservice.models.User;
@@ -51,6 +52,16 @@ public class AuthController {
             return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
         } catch (UserNotRegisteredException e) {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("/validate-token")
+    public ResponseEntity<String> validateToken(@RequestBody ValidateTokenRequestDto validateTokenRequestDto) {
+        boolean isValid = authenticationService.validateToken(validateTokenRequestDto.getToken(), validateTokenRequestDto.getUserId());
+        if(!isValid) {
+            return new ResponseEntity<>("Token is not valid.", HttpStatus.UNAUTHORIZED);
+        } else {
+            return new ResponseEntity<>("Token valid and within expiry", HttpStatus.OK);
         }
     }
 
