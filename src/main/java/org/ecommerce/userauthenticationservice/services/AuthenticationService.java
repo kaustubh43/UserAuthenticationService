@@ -3,7 +3,6 @@ package org.ecommerce.userauthenticationservice.services;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.MacAlgorithm;
 import org.antlr.v4.runtime.misc.Pair;
 import org.ecommerce.userauthenticationservice.exceptions.PasswordMismatchException;
 import org.ecommerce.userauthenticationservice.exceptions.UserExistsException;
