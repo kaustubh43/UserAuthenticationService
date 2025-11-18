@@ -1,9 +1,12 @@
 package org.ecommerce.userauthenticationservice.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import org.antlr.v4.runtime.misc.Pair;
+import org.ecommerce.userauthenticationservice.clients.KafkaProducerClient;
+import org.ecommerce.userauthenticationservice.dtos.EmailDto;
 import org.ecommerce.userauthenticationservice.exceptions.PasswordMismatchException;
 import org.ecommerce.userauthenticationservice.exceptions.UserExistsException;
 import org.ecommerce.userauthenticationservice.exceptions.UserNotRegisteredException;
@@ -14,6 +17,7 @@ import org.ecommerce.userauthenticationservice.models.User;
 import org.ecommerce.userauthenticationservice.repositories.SessionRepository;
 import org.ecommerce.userauthenticationservice.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.expression.SecurityExpressionHandler;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,14 +35,20 @@ public class AuthenticationService implements IAuthenticationService {
     private final SessionRepository sessionRepository;
     private final SecretKey secretKey;
     private final SecurityExpressionHandler securityExpressionHandler;
+    private final KafkaProducerClient kafkaProducerClient;
+    private final ObjectMapper objectMapper;
+
+    private final String EMAIL_SIGNUP = "EMAIL_SIGNUP";
 
     @Autowired
-    public AuthenticationService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, SessionRepository sessionRepository, SecretKey secretKey, SecurityExpressionHandler securityExpressionHandler) {
+    public AuthenticationService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, SessionRepository sessionRepository, SecretKey secretKey, SecurityExpressionHandler securityExpressionHandler, KafkaProducerClient kafkaProducerClient, ObjectMapper objectMapper) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.sessionRepository = sessionRepository;
         this.secretKey = secretKey;
         this.securityExpressionHandler = securityExpressionHandler;
+        this.kafkaProducerClient = kafkaProducerClient;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -56,6 +66,17 @@ public class AuthenticationService implements IAuthenticationService {
         userRepository.save(user);
 
         // Todo: Add welcome email functionality here.
+        try {
+            EmailDto emailDto = EmailDto.builder()
+                    .to(email)
+                    .from("kaustubhajgaonkar43@gmail.com")
+                    .body("Welcome " + name + "! Thank you for registering with us.")
+                    .subject("Welcome to E-Commerce App!")
+                    .build();
+            kafkaProducerClient.sendMessage(EMAIL_SIGNUP, objectMapper.writeValueAsString(emailDto));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed while sending email" + e.getMessage());
+        }
 
         return user;
     }
