@@ -54,6 +54,9 @@ public class AuthenticationService implements IAuthenticationService {
         user.setPassword(passwordEncoder.encode(password));
         user.setPhoneNumber(phoneNumber);
         userRepository.save(user);
+
+        // Todo: Add welcome email functionality here.
+
         return user;
     }
 
