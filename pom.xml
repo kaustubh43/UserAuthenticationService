@@ -56,6 +56,12 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- In-memory database for @DataJpaTest repository slice tests -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <!-- Use Spring Boot JPA starter (includes Hibernate and Jakarta persistence API compatible with Spring Boot 3+) -->
         <dependency>
