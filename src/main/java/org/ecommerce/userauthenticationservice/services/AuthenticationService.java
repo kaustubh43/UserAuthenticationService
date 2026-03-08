@@ -17,7 +17,6 @@ import org.ecommerce.userauthenticationservice.models.User;
 import org.ecommerce.userauthenticationservice.repositories.SessionRepository;
 import org.ecommerce.userauthenticationservice.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.expression.SecurityExpressionHandler;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -69,7 +68,7 @@ public class AuthenticationService implements IAuthenticationService {
         try {
             EmailDto emailDto = EmailDto.builder()
                     .to(email)
-                    .from("kaustubhajgaonkar43@gmail.com")
+                    .from("kaustubh2398@gmail.com")
                     .body("Welcome " + name + "! Thank you for registering with us.")
                     .subject("Welcome to E-Commerce App!")
                     .build();
